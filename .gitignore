@@ -1,0 +1,20 @@
+# Maven
+target/
+
+# Logs
+*.log
+
+# STS/Eclipse
+.settings/
+.project
+.classpath
+
+# IntelliJ (just in case)
+.idea/
+*.iml
+
+# OS
+.DS_Store
+
+# Node (future React)
+node_modules/
