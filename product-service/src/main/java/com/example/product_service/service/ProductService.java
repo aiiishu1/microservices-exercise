@@ -48,6 +48,10 @@ public class ProductService {
                 .collect(Collectors.toList());
     }
     
+    public List<Product> getProductsAbovePriceNative(double price) {
+        return productRepository.findProductsAbovePrice(price);
+    }
+    
     // Delete Products by ID
     public void deleteProduct(Integer id) {
         productRepository.deleteById(id);

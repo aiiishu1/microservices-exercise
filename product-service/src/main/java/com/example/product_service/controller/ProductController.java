@@ -49,6 +49,11 @@ public class ProductController {
         return productService.getProductsAbovePrice(price);
     }
     
+    @GetMapping("/native-filter")
+    public List<Product> getProductsAbovePriceNative(@RequestParam double price) {
+        return productService.getProductsAbovePriceNative(price);
+    }
+    
     // UPDATE
     @PutMapping("/{id}")
     public Product updateProduct(@PathVariable Integer id, @RequestBody Product updatedProduct) {
