@@ -31,4 +31,8 @@ public class ProductService {
     public List<Product> getAllProducts() {
         return productRepository.findAll();
     }
+    // Delete Products by ID
+    public void deleteProduct(Integer id) {
+        productRepository.deleteById(id);
+    }
 }
