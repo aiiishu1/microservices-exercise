@@ -3,6 +3,7 @@ package com.example.product_service.controller;
 import com.example.product_service.entity.Product;
 import com.example.product_service.service.ProductService;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.data.domain.Page;
 
 import java.util.List;
 
@@ -34,6 +35,20 @@ public class ProductController {
         return productService.getAllProducts();
     }
 
+    @GetMapping("/paginated")
+    public Page<Product> getProductsPaginated(
+            @RequestParam int page,
+            @RequestParam int size,
+            @RequestParam String sortBy) {
+
+        return productService.getProductsPaginated(page, size, sortBy);
+    }
+    
+    @GetMapping("/filter")
+    public List<Product> getProductsAbovePrice(@RequestParam double price) {
+        return productService.getProductsAbovePrice(price);
+    }
+    
     // UPDATE
     @PutMapping("/{id}")
     public Product updateProduct(@PathVariable Integer id, @RequestBody Product updatedProduct) {

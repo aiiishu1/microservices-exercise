@@ -6,6 +6,8 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
+import org.springframework.data.domain.*;
 
 @Service
 public class ProductService {
@@ -31,8 +33,25 @@ public class ProductService {
     public List<Product> getAllProducts() {
         return productRepository.findAll();
     }
+    
+    public Page<Product> getProductsPaginated(int page, int size, String sortBy) {
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by(sortBy));
+
+        return productRepository.findAll(pageable);
+    }
+    
+    public List<Product> getProductsAbovePrice(double price) {
+        return productRepository.findAll()
+                .stream()
+                .filter(p -> p.getPrice() > price)
+                .collect(Collectors.toList());
+    }
+    
     // Delete Products by ID
     public void deleteProduct(Integer id) {
         productRepository.deleteById(id);
     }
+    
+   
 }
