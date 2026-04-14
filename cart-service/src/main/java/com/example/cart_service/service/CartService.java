@@ -3,6 +3,9 @@ package com.example.cart_service.service;
 import com.example.cart_service.entity.Cart;
 import com.example.cart_service.repository.CartRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.client.WebClient;
+import com.example.cart_service.dto.ProductDTO;
+
 
 import java.util.List;
 import java.util.Optional;
@@ -11,10 +14,13 @@ import java.util.Optional;
 public class CartService {
 
     private final CartRepository cartRepository;
+    private final WebClient webClient;
 
-    public CartService(CartRepository cartRepository) {
+    public CartService(CartRepository cartRepository, WebClient webClient) {
         this.cartRepository = cartRepository;
+        this.webClient = webClient;
     }
+    
 
     // Create Cart
     public Cart createCart(Cart cart) {
@@ -30,5 +36,30 @@ public class CartService {
     // Get All Carts
     public List<Cart> getAllCarts() {
         return cartRepository.findAll();
+    }
+    
+   
+    
+    public ProductDTO getProductFromService(Integer productId) {
+        return webClient.get()
+                .uri("/products/" + productId)
+                .retrieve()
+                .bodyToMono(ProductDTO.class)
+                .block(); // blocking for now (we’ll improve in 1K)
+    }
+    
+    public boolean validateProduct(Integer productId, Integer quantity) {
+
+        ProductDTO product = getProductFromService(productId);
+
+        if (product == null) {
+            throw new RuntimeException("Product not found");
+        }
+
+        if (product.getStock() < quantity) {
+            throw new RuntimeException("Insufficient stock");
+        }
+
+        return true;
     }
 }
