@@ -6,6 +6,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import com.example.cart_service.dto.ProductDTO;
 
+import com.example.cart_service.event.CartEvent;
+import com.example.cart_service.service.KafkaProducerService;
 
 import java.util.List;
 import java.util.Optional;
@@ -15,11 +17,15 @@ public class CartService {
 
     private final CartRepository cartRepository;
     private final WebClient webClient;
+    private final KafkaProducerService kafkaProducerService;
 
-    public CartService(CartRepository cartRepository, WebClient webClient) {
-        this.cartRepository = cartRepository;
-        this.webClient = webClient;
-    }
+    public CartService(CartRepository cartRepository,
+            WebClient webClient,
+            KafkaProducerService kafkaProducerService) {
+this.cartRepository = cartRepository;
+this.webClient = webClient;
+this.kafkaProducerService = kafkaProducerService;
+}
     
 
     // Create Cart
@@ -59,6 +65,10 @@ public class CartService {
         if (product.getStock() < quantity) {
             throw new RuntimeException("Insufficient stock");
         }
+
+        // Kafka event publishing
+        CartEvent event = new CartEvent(1, productId, quantity);
+        kafkaProducerService.sendEvent(event);
 
         return true;
     }
