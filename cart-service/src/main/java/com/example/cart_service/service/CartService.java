@@ -7,7 +7,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 import com.example.cart_service.dto.ProductDTO;
 
 import com.example.cart_service.event.CartEvent;
-import com.example.cart_service.service.KafkaProducerService;
+import reactor.core.publisher.Mono;
 
 import java.util.List;
 import java.util.Optional;
@@ -46,30 +46,32 @@ this.kafkaProducerService = kafkaProducerService;
     
    
     
-    public ProductDTO getProductFromService(Integer productId) {
+    public Mono<ProductDTO> getProductFromService(Integer productId) {
         return webClient.get()
                 .uri("/products/" + productId)
                 .retrieve()
-                .bodyToMono(ProductDTO.class)
-                .block(); // blocking for now (we’ll improve in 1K)
+                .bodyToMono(ProductDTO.class);
+                
     }
     
-    public boolean validateProduct(Integer productId, Integer quantity) {
+    public Mono<String> validateProduct(Integer productId, Integer quantity) {
+    	
+    	return getProductFromService(productId)
+    			.flatMap(product -> {
+    				 if (product == null) {
+    					 return Mono.error(new RuntimeException("Product not found"));
+    				 }
+    				 if (product.getStock() < quantity) {
+    	                    return Mono.error(new RuntimeException("Insufficient stock"));
+    	                }
+    				// Kafka Event Publish
+    	                CartEvent event = new CartEvent(1, productId, quantity);
+    	                kafkaProducerService.sendEvent(event);
+    	                
+    	                return Mono.just("Product is valid and stock is sufficient");
 
-        ProductDTO product = getProductFromService(productId);
 
-        if (product == null) {
-            throw new RuntimeException("Product not found");
-        }
-
-        if (product.getStock() < quantity) {
-            throw new RuntimeException("Insufficient stock");
-        }
-
-        // Kafka event publishing
-        CartEvent event = new CartEvent(1, productId, quantity);
-        kafkaProducerService.sendEvent(event);
-
-        return true;
+    			});
+        
     }
 }
