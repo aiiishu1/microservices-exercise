@@ -19,7 +19,7 @@ public class CartController {
             @RequestParam Integer productId,
             @RequestParam Integer quantity) {
 
-    	return cartService.validateProduct(productId, quantity)
-                .onErrorResume(e -> Mono.just(e.getMessage()));
+    	return cartService.validateProduct(productId, quantity);
+                
     }
 }

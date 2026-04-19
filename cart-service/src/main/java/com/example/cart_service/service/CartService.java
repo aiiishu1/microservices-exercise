@@ -9,6 +9,9 @@ import com.example.cart_service.dto.ProductDTO;
 import com.example.cart_service.event.CartEvent;
 import reactor.core.publisher.Mono;
 
+import com.example.cart_service.exception.ProductNotFoundException;
+import com.example.cart_service.exception.InsufficientStockException;
+
 import java.util.List;
 import java.util.Optional;
 
@@ -55,23 +58,26 @@ this.kafkaProducerService = kafkaProducerService;
     }
     
     public Mono<String> validateProduct(Integer productId, Integer quantity) {
-    	
-    	return getProductFromService(productId)
-    			.flatMap(product -> {
-    				 if (product == null) {
-    					 return Mono.error(new RuntimeException("Product not found"));
-    				 }
-    				 if (product.getStock() < quantity) {
-    	                    return Mono.error(new RuntimeException("Insufficient stock"));
-    	                }
-    				// Kafka Event Publish
-    	                CartEvent event = new CartEvent(1, productId, quantity);
-    	                kafkaProducerService.sendEvent(event);
-    	                
-    	                return Mono.just("Product is valid and stock is sufficient");
 
+        return getProductFromService(productId)
 
-    			});
-        
+                .switchIfEmpty(
+                        Mono.error(new ProductNotFoundException("Product not found"))
+                )
+
+                .flatMap(product -> {
+
+                    if (product.getStock() < quantity) {
+                        return Mono.error(
+                                new InsufficientStockException("Insufficient stock")
+                        );
+                    }
+
+                    // Kafka Event Publish
+                    CartEvent event = new CartEvent(1, productId, quantity);
+                    kafkaProducerService.sendEvent(event);
+
+                    return Mono.just("Product is valid and stock is sufficient");
+                });
     }
 }
