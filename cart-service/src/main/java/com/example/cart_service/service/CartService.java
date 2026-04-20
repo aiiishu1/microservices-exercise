@@ -12,6 +12,9 @@ import reactor.core.publisher.Mono;
 import com.example.cart_service.exception.ProductNotFoundException;
 import com.example.cart_service.exception.InsufficientStockException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.List;
 import java.util.Optional;
 
@@ -47,7 +50,8 @@ this.kafkaProducerService = kafkaProducerService;
         return cartRepository.findAll();
     }
     
-   
+    private static final Logger logger =
+            LoggerFactory.getLogger(CartService.class);
     
     public Mono<ProductDTO> getProductFromService(Integer productId) {
         return webClient.get()
@@ -68,10 +72,13 @@ this.kafkaProducerService = kafkaProducerService;
                 .flatMap(product -> {
 
                     if (product.getStock() < quantity) {
+                    	logger.error("Insufficient stock for productId: {}", productId);
                         return Mono.error(
                                 new InsufficientStockException("Insufficient stock")
                         );
                     }
+                    
+                    logger.info("Product validation successful for productId: {}", productId);
 
                     // Kafka Event Publish
                     CartEvent event = new CartEvent(1, productId, quantity);

@@ -4,6 +4,8 @@ import com.example.cart_service.event.CartEvent;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 @Service
 public class KafkaProducerService {
 
@@ -12,6 +14,8 @@ public class KafkaProducerService {
     public KafkaProducerService(KafkaTemplate<String, String> kafkaTemplate) {
         this.kafkaTemplate = kafkaTemplate;
     }
+    private static final Logger logger =
+            LoggerFactory.getLogger(KafkaProducerService.class);
 
     public void sendEvent(CartEvent event) {
 
@@ -19,14 +23,14 @@ public class KafkaProducerService {
                 ", ProductId: " + event.getProductId() +
                 ", Quantity: " + event.getQuantity();
 
-        System.out.println("Sending message to Kafka: " + message);
-
+        logger.info("Sending Kafka event: {}", message);
+        
         kafkaTemplate.send("cart-topic", message)
                 .whenComplete((result, ex) -> {
                     if (ex == null) {
-                        System.out.println("Message sent successfully");
+                    	logger.info("Kafka message sent successfully");
                     } else {
-                        System.out.println("Kafka send failed: " + ex.getMessage());
+                        logger.error("Kafka send failed: {}", ex.getMessage());
                     }
                 });
     }
